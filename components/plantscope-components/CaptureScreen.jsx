@@ -145,42 +145,48 @@ const CaptureScreen = ({ navigation }) => {
 
 	const fetchWikiImages = async (pageId) => {
 		try {
-			const imageResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
+		  const imageResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
+			params: {
+			  action: 'query',
+			  format: 'json',
+			  prop: 'images',
+			  pageids: pageId,
+			  origin: '*',
+			},
+		  });
+	  
+		  const imagePages = imageResponse.data.query.pages[pageId]?.images || [];
+		  
+		  const imageUrls = await Promise.all(
+			imagePages.map(async (image) => {
+			  const imageUrlResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
 				params: {
-					action: 'query',
-					format: 'json',
-					prop: 'images',
-					pageids: pageId,
-					origin: '*',
+				  action: 'query',
+				  format: 'json',
+				  titles: image.title,
+				  prop: 'imageinfo',
+				  iiprop: 'url',
+				  origin: '*',
 				},
-			});
-
-			const imagePages = imageResponse.data.query.pages[pageId]?.images || [];
-			const imageUrls = await Promise.all(
-				imagePages.map(async (image) => {
-					const imageUrlResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
-						params: {
-							action: 'query',
-							format: 'json',
-							titles: image.title,
-							prop: 'imageinfo',
-							iiprop: 'url',
-							origin: '*',
-						},
-					});
-
-					const imgInfo = imageUrlResponse.data.query.pages;
-					const imageDetails = Object.values(imgInfo)[0]?.imageinfo[0]?.url;
-					return imageDetails || null;
-				})
-			);
-
-			return imageUrls.filter((url) => url); 
+			  });
+	  
+			  const imgInfo = imageUrlResponse.data.query.pages;
+			  const imageDetails = Object.values(imgInfo)[0]?.imageinfo?.[0]?.url;
+	  
+			  if (imageDetails && /\.(jpg|jpeg|png|gif)$/i.test(imageDetails)) {
+				return imageDetails;
+			  }
+			  return null; 
+			})
+		  );
+	  
+		  return imageUrls.filter((url) => url);
 		} catch (error) {
-			console.error('Error fetching Wikipedia images:', error);
-			return [];
+		  console.error('Error fetching Wikipedia images:', error);
+		  return [];
 		}
-	};
+	  };
+	  
 
 	const addToCollection = async () => {
 		if (plantInfo) {
@@ -265,10 +271,16 @@ const CaptureScreen = ({ navigation }) => {
 
 							{/* display wikipedia images */}
 							<ScrollView style={styles.imageList} contentContainerStyle={{ alignItems: 'center' }}>
-								<Text style={styles.moreImagesBold} >More images:</Text>
-								{wikiImages.map((imageUrl, index) => (
-									<Image key={index} source={{ uri: imageUrl }} style={styles.wikiImage} />
-								))}
+								<Text style={styles.moreImagesBold}>More images:</Text>
+								{wikiImages
+									.filter((imageUrl) => imageUrl)
+									.map((imageUrl, index) => (
+									<Image
+										key={index}
+										source={{ uri: imageUrl }}
+										style={styles.wikiImage}
+									/>
+									))}
 							</ScrollView>
 						</>
 					)}
@@ -354,26 +366,30 @@ const styles = StyleSheet.create({
 	chooseButton: {
 		flexDirection: 'column', 
 		justifyContent: 'center',
+		alignItems: 'center',
 		backgroundColor: '#5bc443', 
 		paddingVertical: 20,
 		paddingHorizontal: 40,
 		borderRadius: 10,
 		marginBottom: 20,
 		width: 300,
+		height: 200,
 	},
 	chooseButtonText: {
 		color: 'white', 
 		fontSize: 18,
-		marginTop: 10,
+		marginTop: 0,
 	},
 	chooseIcon: {
-		marginBottom: 5, 
+		marginBottom: 0, 
+		marginTop: 10,
 	},
 	separator: {
-		height: 1,
-		width: '80%',
-		backgroundColor: 'grey', 
-		marginVertical: 10,
+		height: 1,                
+		width: '80%',              
+		backgroundColor: 'grey',   
+		marginVertical: 15,        
+		alignSelf: 'center',       
 	},
 	imageList: {
 		marginTop: 10,
