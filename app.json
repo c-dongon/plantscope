@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "critter-catcher",
-    "slug": "critter-catcher",
+    "name": "plantscope",
+    "slug": "plantscope",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
