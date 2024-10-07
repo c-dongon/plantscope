@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CollectionStackNavigator from './CollectionStackNavigator';
 import CaptureScreen from './CaptureScreen';
-import FriendsScreen from './FriendsScreen';
+import FriendsNavigator from './FriendsNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,7 +32,7 @@ const BottomTabNavigator = () => {
         >
             <Tab.Screen name="Collection" component={CollectionStackNavigator} />
             <Tab.Screen name="Capture" component={CaptureScreen}/>
-            <Tab.Screen name="Friends" component={FriendsScreen}/>
+            <Tab.Screen name="Friends" component={FriendsNavigator} />
         </Tab.Navigator>
     );
 };

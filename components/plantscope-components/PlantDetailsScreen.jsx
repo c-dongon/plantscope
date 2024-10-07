@@ -3,6 +3,8 @@ import { View, Text, Image, Button, Alert, ScrollView, StyleSheet, TouchableOpac
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { auth, firestore } from './firebase.client';
+import { doc, deleteDoc } from 'firebase/firestore';
 
 const PlantDetailsScreen = ({ route, navigation }) => {
 	const { plant } = route.params;
@@ -110,23 +112,33 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 			}
 	};
 	  
-
 	const handleRemovePlant = async () => {
 		try {
-		const storedCollection = await AsyncStorage.getItem('plantCollection');
-		if (storedCollection) {
-			const updatedCollection = JSON.parse(storedCollection).filter(
-			(item) => item.plantInfo.species.scientificName !== plant.plantInfo.species.scientificName
-			);
-			await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+			const userId = auth.currentUser ? auth.currentUser.uid : null;
+			const plantDocId = plant.docId || null;
+	
+			if (userId && plantDocId) {
+				const plantRef = doc(firestore, 'users', userId, 'plants', plantDocId);
+				await deleteDoc(plantRef);
+			}
+	
+			const storedCollection = await AsyncStorage.getItem('plantCollection');
+			if (storedCollection) {
+				const updatedCollection = JSON.parse(storedCollection).filter(
+					(item) => item.docId !== plantDocId
+				);
+				await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+			}
+	
 			Alert.alert('Success', 'Plant removed from your collection.');
-			navigation.goBack(); 
-		}
+			navigation.goBack();
 		} catch (error) {
-		console.error('Error removing plant:', error);
+			console.error('Error removing plant:', error.message);
+			Alert.alert('Error', 'Failed to remove plant.');
 		}
 	};
-
+	
+	
 	const formatExtract = (extract) => {
 		return extract.split('\n').map((paragraph, index) => (
 		<Text key={index} style={styles.paragraph}>

@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { auth, firestore } from './firebase.client';
 
 const CaptureScreen = ({ navigation }) => {
 	const [selectedImage, setSelectedImage] = useState(null);
@@ -145,39 +147,39 @@ const CaptureScreen = ({ navigation }) => {
 
 	const fetchWikiImages = async (pageId) => {
 		try {
-		  const imageResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
-			params: {
-			  action: 'query',
-			  format: 'json',
-			  prop: 'images',
-			  pageids: pageId,
-			  origin: '*',
-			},
-		  });
-	  
-		  const imagePages = imageResponse.data.query.pages[pageId]?.images || [];
-		  
-		  const imageUrls = await Promise.all(
-			imagePages.map(async (image) => {
-			  const imageUrlResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
+			const imageResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
 				params: {
-				  action: 'query',
-				  format: 'json',
-				  titles: image.title,
-				  prop: 'imageinfo',
-				  iiprop: 'url',
-				  origin: '*',
+					action: 'query',
+					format: 'json',
+					prop: 'images',
+					pageids: pageId,
+					origin: '*',
 				},
-			  });
+			});
 	  
-			  const imgInfo = imageUrlResponse.data.query.pages;
-			  const imageDetails = Object.values(imgInfo)[0]?.imageinfo?.[0]?.url;
-	  
-			  if (imageDetails && /\.(jpg|jpeg|png|gif)$/i.test(imageDetails)) {
-				return imageDetails;
-			  }
-			  return null; 
-			})
+		  	const imagePages = imageResponse.data.query.pages[pageId]?.images || [];
+		  
+		  	const imageUrls = await Promise.all(
+				imagePages.map(async (image) => {
+				const imageUrlResponse = await axios.get('https://en.wikipedia.org/w/api.php', {
+					params: {
+						action: 'query',
+						format: 'json',
+						titles: image.title,
+						prop: 'imageinfo',
+						iiprop: 'url',
+						origin: '*',
+					},
+				});
+		
+					const imgInfo = imageUrlResponse.data.query.pages;
+					const imageDetails = Object.values(imgInfo)[0]?.imageinfo?.[0]?.url;
+		
+					if (imageDetails && /\.(jpg|jpeg|png|gif)$/i.test(imageDetails)) {
+						return imageDetails;
+					}
+				return null; 
+				})
 		  );
 	  
 		  return imageUrls.filter((url) => url);
@@ -188,32 +190,57 @@ const CaptureScreen = ({ navigation }) => {
 	  };
 	  
 
-	const addToCollection = async () => {
+	  const addToCollection = async () => {
 		if (plantInfo) {
 			const newPlant = { plantInfo, wikiPlantDetails, imageUri: selectedImage };
-
+			let plantRefId = null; 
+	
 			try {
+				const userId = auth.currentUser ? auth.currentUser.uid : null;
+	
+				if (userId) {
+					const plantsCollectionRef = collection(firestore, 'users', userId, 'plants');
+					const plantsSnapshot = await getDocs(plantsCollectionRef);
+					const plantExists = plantsSnapshot.docs.some(
+						doc => doc.data().plantInfo.species.scientificName === plantInfo.species.scientificName
+					);
+	
+					if (plantExists) {
+						Alert.alert('Duplicate Plant', 'This plant is already in your collection.');
+						return;
+					}
+	
+					const plantRef = doc(plantsCollectionRef); 
+					plantRefId = plantRef.id;
+	
+					await setDoc(plantRef, { ...newPlant, docId: plantRefId });
+				}
+	
 				const storedCollection = await AsyncStorage.getItem('plantCollection');
 				let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
-
+	
 				const duplicate = updatedCollection.find(
 					(item) => item.plantInfo.species.scientificName === plantInfo.species.scientificName
 				);
-
+	
 				if (duplicate) {
-					Alert.alert('Duplicate Plant', 'This plant is already in your collection.');
+					Alert.alert('Duplicate Plant', 'This plant is already in your local collection.');
 					return;
 				}
-
-				updatedCollection.push(newPlant);
+	
+				const plantToStore = plantRefId ? { ...newPlant, docId: plantRefId } : newPlant;
+	
+				updatedCollection.push(plantToStore);
 				await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+	
 				Alert.alert('Success', 'Plant added to your collection.');
 			} catch (error) {
-				console.error('Error saving collection:', error);
+				console.warn('Error adding plant:', error.message);
 			}
 		}
 	};
-
+	
+	
 	const formatExtract = (extract) => {
 		return extract.split('\n').map((paragraph, index) => (
 			<Text key={index} style={styles.paragraph}>
