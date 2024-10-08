@@ -24,3 +24,6 @@ app-example/
 
 .vscode/
 scripts/
+
+# keep keys secret
+keys.env
