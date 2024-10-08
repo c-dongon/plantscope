@@ -9,6 +9,26 @@ import { collection, getDocs } from 'firebase/firestore';
 const CollectionScreen = ({ navigation }) => {
  	const [collectionData, setCollectionData] = useState([]);
 
+	 const removePlantLocally = async (plantToRemove) => {
+        try {
+            const storedCollection = await AsyncStorage.getItem('plantCollection');
+            let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
+    
+            const plantToRemoveScientificName = plantToRemove.plantInfo.species.scientificName.trim().toLowerCase();
+    
+            updatedCollection = updatedCollection.filter(
+                (plant) => plant.plantInfo.species.scientificName.trim().toLowerCase() !== plantToRemoveScientificName
+            );
+    
+            await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+            Alert.alert('Success', 'Plant removed from local collection.');
+            setCollectionData(updatedCollection); // Update the displayed collection
+        } catch (error) {
+            console.error('Error removing plant locally:', error.message);
+            Alert.alert('Error', 'Failed to remove plant from local collection.');
+        }
+    };
+
 	useFocusEffect(
 		React.useCallback(() => {
 			const loadCollection = async () => {
@@ -39,9 +59,9 @@ const CollectionScreen = ({ navigation }) => {
 		}, [])
 	);
 
-  const handlePlantPress = (plant) => {
-    navigation.navigate('PlantDetails', { plant });
-  };
+	const handlePlantPress = (plant) => {
+		navigation.navigate('PlantDetails', { plant }); // Ensure the full plant object with docId is passed
+	};
 
   const renderPlantItem = ({ item }) => (
     <TouchableOpacity onPress={() => handlePlantPress(item)} style={styles.itemContainer}>
@@ -60,7 +80,7 @@ const CollectionScreen = ({ navigation }) => {
     <View style={styles.container}>
 		{collectionData.length > 0 ? (
 			<>
-			<Text style={styles.totalCountText}>Plants found: {collectionData.length}</Text>
+			<Text style={styles.totalCountText}>Plants Found: {collectionData.length}</Text>
 			<FlatList
 				data={collectionData}
 				renderItem={renderPlantItem}

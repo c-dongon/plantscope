@@ -7,7 +7,22 @@ const SearchScreen = ({ navigation, route }) => {
     const [queryText, setQueryText] = useState('');
     const [results, setResults] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
-    const { userId } = route.params; 
+    const [userInfo, setUserInfo] = useState(null); // Initialize userInfo state
+    const { userId } = route.params;
+
+    const fetchUserInfo = async () => {
+        try {
+            const userDocRef = doc(firestore, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                setUserInfo(userDoc.data()); // Save user data into state
+            } else {
+                console.error('User does not exist');
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error.message);
+        }
+    };
 
     const fetchFriendRequests = async () => {
         try {
@@ -35,7 +50,8 @@ const SearchScreen = ({ navigation, route }) => {
     };
 
     useEffect(() => {
-        fetchFriendRequests(); 
+        fetchUserInfo(); // Fetch current user info when component mounts
+        fetchFriendRequests();
     }, []);
 
     const handleSearch = async () => {
@@ -68,19 +84,43 @@ const SearchScreen = ({ navigation, route }) => {
         }
     };
 
-    const handleAcceptFriendRequest = async (requesterId) => {
+    const handleAcceptFriendRequest = async (requesterId, requesterUsername) => {
         try {
+            // Ensure current user's username is loaded
+            if (!userInfo || !userInfo.username) {
+                const userDocRef = doc(firestore, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    setUserInfo(userDoc.data());
+                } else {
+                    throw new Error('Current user info is missing');
+                }
+            }
+
+            // Ensure requester's username is fetched correctly
+            if (!requesterUsername) {
+                const requesterDocRef = doc(firestore, 'users', requesterId);
+                const requesterDoc = await getDoc(requesterDocRef);
+                if (requesterDoc.exists()) {
+                    requesterUsername = requesterDoc.data().username || 'Unknown';
+                } else {
+                    throw new Error('Requester username is missing');
+                }
+            }
+
+            // Add friend for both users
             const userFriendRef = doc(firestore, 'users', userId, 'friends', requesterId);
             const requesterFriendRef = doc(firestore, 'users', requesterId, 'friends', userId);
 
-            await setDoc(userFriendRef, { friendId: requesterId });
-            await setDoc(requesterFriendRef, { friendId: userId });
+            await setDoc(userFriendRef, { friendId: requesterId, username: requesterUsername });
+            await setDoc(requesterFriendRef, { friendId: userId, username: userInfo.username }); // Ensure userInfo.username exists
 
+            // Remove the friend request document
             const requestDocRef = doc(firestore, 'users', userId, 'friendRequests', requesterId);
             await deleteDoc(requestDocRef);
 
             alert('Friend request accepted!');
-            fetchFriendRequests();
+            fetchFriendRequests(); // Refresh the friend requests
         } catch (error) {
             console.error('Error accepting friend request:', error.message);
         }
@@ -114,10 +154,10 @@ const SearchScreen = ({ navigation, route }) => {
             data={friendRequests}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleAcceptFriendRequest(item.requesterId)}>
+            <TouchableOpacity onPress={() => handleAcceptFriendRequest(item.requesterId, item.requesterUsername)}>
                 <View style={styles.resultItem}>
                     <Text>{item.requesterUsername} has sent you a friend request.</Text>
-                    <Button title="Accept" onPress={() => handleAcceptFriendRequest(item.requesterId)} />
+                    <Button title="Accept" onPress={() => handleAcceptFriendRequest(item.requesterId, item.requesterUsername)} />
                 </View>
             </TouchableOpacity>
             )}

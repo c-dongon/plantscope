@@ -24,7 +24,11 @@ const FriendsNavigator = () => {
         <Stack.Screen 
             name="FriendsList" 
             component={FriendsListScreen} 
-            options={{ title: 'Friends' }} 
+            options={{ 
+                title: 'Friends',
+                headerLeft: () => null,
+                headerShown: false,
+            }} 
         />
         <Stack.Screen 
             name="SearchScreen" 
@@ -34,7 +38,7 @@ const FriendsNavigator = () => {
         <Stack.Screen 
             name="FriendDetailScreen" 
             component={FriendDetailScreen} 
-            options={({ route }) => ({ title: route.params.friend.name + "'s Plants" })} 
+            options={({ route }) => ({ title: route.params.friend.username + "'s Collection" })} 
         />
         </Stack.Navigator>
     );

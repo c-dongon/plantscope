@@ -115,28 +115,35 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 	const handleRemovePlant = async () => {
 		try {
 			const userId = auth.currentUser ? auth.currentUser.uid : null;
-			const plantDocId = plant.docId || null;
+			const plantDocId = plant.docId; 
+	
+			if (!plantDocId) {
+				console.error("Plant docId is missing or null");
+				return;
+			}
 	
 			if (userId && plantDocId) {
 				const plantRef = doc(firestore, 'users', userId, 'plants', plantDocId);
-				await deleteDoc(plantRef);
-			}
+				await deleteDoc(plantRef); 
 	
-			const storedCollection = await AsyncStorage.getItem('plantCollection');
-			if (storedCollection) {
-				const updatedCollection = JSON.parse(storedCollection).filter(
-					(item) => item.docId !== plantDocId
-				);
-				await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
-			}
+				const storedCollection = await AsyncStorage.getItem('plantCollection');
+				if (storedCollection) {
+					const updatedCollection = JSON.parse(storedCollection).filter(
+						(item) => item.docId !== plantDocId
+					);
+					await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+				}
 	
-			Alert.alert('Success', 'Plant removed from your collection.');
-			navigation.goBack();
+				Alert.alert('Success', 'Plant removed from your collection.');
+				navigation.goBack();
+			}
 		} catch (error) {
 			console.error('Error removing plant:', error.message);
 			Alert.alert('Error', 'Failed to remove plant.');
 		}
 	};
+	
+	
 	
 	
 	const formatExtract = (extract) => {
@@ -147,6 +154,8 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 		));
 	};
 
+
+	
 	return (
 		<ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
 			{/* planetnet api info */}
