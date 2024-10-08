@@ -4,14 +4,24 @@ import { getFirestore, collection, doc, setDoc, getDocs, query, where, deleteDoc
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { 
+  REACT_APP_FIREBASE_API_KEY,
+  REACT_APP_FIREBASE_AUTH_DOMAIN,
+  REACT_APP_FIREBASE_PROJECT_ID,
+  REACT_APP_FIREBASE_STORAGE_BUCKET,
+  REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  REACT_APP_FIREBASE_APP_ID,
+  REACT_APP_FIREBASE_MEASUREMENT_ID
+} from '@env';
+
 const firebaseConfig = {
-  apiKey: "AIzaSyAmFhk75hRVRRpV-HgkUcx3nrObbfgJTKU",
-  authDomain: "plantscope-4ccd2.firebaseapp.com",
-  projectId: "plantscope-4ccd2",
-  storageBucket: "plantscope-4ccd2.appspot.com",
-  messagingSenderId: "928856242106",
-  appId: "1:928856242106:web:e76ab857ff829dbb894f83",
-  measurementId: "G-4G7LM5C0FG"
+  apiKey: REACT_APP_FIREBASE_API_KEY,
+  authDomain: REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: REACT_APP_FIREBASE_APP_ID,
+  measurementId: REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 let app;

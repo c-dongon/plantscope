@@ -8,6 +8,8 @@ import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, firestore, storage } from './firebase.client';  
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
+import { REACT_APP_PLANTNET_API_KEY } from '@env';
+
 const CaptureScreen = ({ navigation }) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [plantInfo, setPlantInfo] = useState(null);
@@ -15,7 +17,7 @@ const CaptureScreen = ({ navigation }) => {
     const [wikiImages, setWikiImages] = useState([]); 
     const [loading, setLoading] = useState(false);
 
-    const plantNetApiKey = '2b10Q2hPncLcNlnBAAkDqaO';
+    const plantNetApiKey = REACT_APP_PLANTNET_API_KEY;
 
     const resetScreen = () => {
         setSelectedImage(null);
@@ -191,59 +193,57 @@ const CaptureScreen = ({ navigation }) => {
     };
 
 	const addToCollection = async () => {
-		if (plantInfo) {
-			let imageUrl = selectedImage;  
-			let plantRefId = null;
+		let imageUrl = selectedImage; 
+		let plantRefId = null;
 	
+		if (plantInfo) {
 			try {
 				const userId = auth.currentUser ? auth.currentUser.uid : null;
 	
-				if (userId) {
-					if (selectedImage) {
-						const imageRef = ref(storage, `plants/${userId}/${Date.now()}_${plantInfo.species.scientificName}.jpg`);
-						const response = await fetch(selectedImage);
-						const blob = await response.blob();
-						const uploadResult = await uploadBytes(imageRef, blob);
-						imageUrl = await getDownloadURL(uploadResult.ref);
-					}
+				if (userId && selectedImage) {
+					const imageRef = ref(storage, `plants/${userId}/${Date.now()}_${plantInfo.species.scientificName}.jpg`);
+					const response = await fetch(selectedImage);
+					const blob = await response.blob();
+					const uploadResult = await uploadBytes(imageRef, blob);
+					imageUrl = await getDownloadURL(uploadResult.ref); 
+				}
 	
-					const newPlant = { plantInfo, wikiPlantDetails, imageUri: imageUrl };
+				const newPlant = { plantInfo, wikiPlantDetails, imageUri: imageUrl };
+	
+				const storedCollection = await AsyncStorage.getItem('plantCollection');
+				let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
+	
+				const localDuplicate = updatedCollection.some(
+					(item) => item.plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
+				);
+	
+				if (localDuplicate) {
+					Alert.alert('Duplicate Plant', 'This plant is already in your local collection.');
+					return;
+				}
+	
+				if (userId) {
 					const plantsCollectionRef = collection(firestore, 'users', userId, 'plants');
 					const plantsSnapshot = await getDocs(plantsCollectionRef);
-	
-					const newPlantScientificName = plantInfo.species.scientificName.trim().toLowerCase();
-	
+					
 					const plantExists = plantsSnapshot.docs.some(
-						doc => doc.data().plantInfo.species.scientificName.trim().toLowerCase() === newPlantScientificName
+						doc => doc.data().plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
 					);
 	
 					if (plantExists) {
-						Alert.alert('Duplicate Plant', 'This plant is already in your collection.');
+						Alert.alert('Duplicate Plant', 'This plant is already in your Firebase collection.');
 						return;
 					}
 	
 					const plantRef = doc(plantsCollectionRef);
 					plantRefId = plantRef.id;
-	
 					await setDoc(plantRef, { ...newPlant, docId: plantRefId });
-	
-					const storedCollection = await AsyncStorage.getItem('plantCollection');
-					let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
-	
-					const localDuplicate = updatedCollection.some(
-						(item) => item.plantInfo.species.scientificName.trim().toLowerCase() === newPlantScientificName
-					);
-	
-					if (localDuplicate) {
-						Alert.alert('Duplicate Plant', 'This plant is already in your local collection.');
-						return;
-					}
-	
-					updatedCollection.push({ ...newPlant, docId: plantRefId });
-					await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
-	
-					Alert.alert('Success', 'Plant added to your collection.');
 				}
+	
+				updatedCollection.push({ ...newPlant, docId: plantRefId });
+				await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+	
+				Alert.alert('Success', 'Plant added to your collection.');
 			} catch (error) {
 				console.error('Error adding plant:', error.message);
 				Alert.alert('Error', 'Failed to add plant to your collection.');

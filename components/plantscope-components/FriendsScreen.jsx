@@ -26,21 +26,35 @@ const FriendsScreen = ({ navigation }) => {
         try {
             const storedCollection = await AsyncStorage.getItem('plantCollection');
             const localPlants = storedCollection ? JSON.parse(storedCollection) : [];
-
+    
             if (localPlants.length > 0) {
                 const plantsCollectionRef = collection(firestore, 'users', userId, 'plants');
                 const plantsSnapshot = await getDocs(plantsCollectionRef);
-
+    
                 const firebasePlants = plantsSnapshot.docs.map(doc => doc.data());
-
+    
                 const missingPlants = localPlants.filter(localPlant => 
                     !firebasePlants.some(firebasePlant => firebasePlant.plantInfo.species.scientificName === localPlant.plantInfo.species.scientificName)
                 );
-
+    
                 for (const plant of missingPlants) {
                     try {
+                        let imageUrl = plant.imageUri;
+    
+                        if (plant.imageUri && !plant.imageUri.startsWith('https://')) {
+                            const imageRef = ref(storage, `plants/${userId}/${Date.now()}_${plant.plantInfo.species.scientificName}.jpg`);
+                            
+                            const response = await fetch(plant.imageUri);
+                            const blob = await response.blob();
+                            
+                            const uploadResult = await uploadBytes(imageRef, blob);
+                            
+                            imageUrl = await getDownloadURL(uploadResult.ref);
+                        }
+    
                         const plantRef = doc(plantsCollectionRef);
-                        await setDoc(plantRef, { ...plant, docId: plantRef.id });
+                        await setDoc(plantRef, { ...plant, imageUri: imageUrl, docId: plantRef.id });
+    
                     } catch (syncError) {
                         console.error('Error syncing plant to Firebase:', syncError);
                     }
@@ -51,8 +65,7 @@ const FriendsScreen = ({ navigation }) => {
             console.error('Error syncing local plants to Firebase:', error);
         }
     };
-
-
+    
     const handleSignIn = async () => {
         setLoading(true);
         try {
@@ -83,7 +96,7 @@ const FriendsScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
         <Text style={styles.title}>Sign In</Text>
-        <Text style={styles.text}>To add friends, and see their collections!</Text>
+        <Text style={styles.text}>To add friends and see their collections!</Text>
         <TextInput
             style={styles.input}
             placeholder="Username or Email"

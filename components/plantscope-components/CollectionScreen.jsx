@@ -27,7 +27,11 @@ const CollectionScreen = ({ navigation }) => {
             console.error('Error removing plant locally:', error.message);
             Alert.alert('Error', 'Failed to remove plant from local collection.');
         }
-    }; */
+    }; 
+
+	const handleRemovePlant = (plant) => {
+		removePlantLocally(plant);
+	}; */
 
 	useFocusEffect(
 		React.useCallback(() => {
@@ -60,7 +64,7 @@ const CollectionScreen = ({ navigation }) => {
 	);
 
 	const handlePlantPress = (plant) => {
-		navigation.navigate('PlantDetails', { plant }); // Ensure the full plant object with docId is passed
+		navigation.navigate('PlantDetails', { plant });
 	};
 
   const renderPlantItem = ({ item }) => (

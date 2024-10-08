@@ -69,7 +69,7 @@ const RegisterScreen = ({ navigation }) => {
                 <ActivityIndicator size="large" color="#74cc60" />
             ) : (
                 <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-		            <Icon name="log-in-outline" size={24} color="white" />
+		            <Icon name="create-outline" size={24} color="white" />
                     <Text style={styles.registerButtonText}>Register</Text>
                 </TouchableOpacity>
             )}
