@@ -14,12 +14,18 @@ const FriendsNavigator = () => {
         <Stack.Screen 
             name="FriendsScreen" 
             component={FriendsScreen} 
-            options={{ title: 'Sign In' }} 
+            options={{ 
+                title: 'Sign In',
+                headerShown: false,
+            }} 
         />
         <Stack.Screen 
             name="RegisterScreen" 
             component={RegisterScreen} 
-            options={{ title: 'Register' }} 
+            options={{ 
+                title: 'Register',
+                headerShown: false,
+            }} 
         />
         <Stack.Screen 
             name="FriendsList" 
@@ -38,8 +44,10 @@ const FriendsNavigator = () => {
         <Stack.Screen 
             name="FriendDetailScreen" 
             component={FriendDetailScreen} 
-            options={({ route }) => ({ title: route.params.friend.username + "'s Collection" })} 
-        />
+            options={({ route }) => ({
+                title: route.params.friend.username + "'s Collection",
+            })}        
+            />
         </Stack.Navigator>
     );
 };

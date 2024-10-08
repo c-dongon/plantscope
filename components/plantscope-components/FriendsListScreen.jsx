@@ -32,10 +32,10 @@ const FriendsListScreen = ({ route, navigation }) => {
                 console.error("Error fetching user info: ", error.message);
             }
         };
-
+    
         const fetchFriends = () => {
             const friendsCollection = collection(firestore, 'users', userId, 'friends');
-
+    
             const unsubscribe = onSnapshot(friendsCollection, async (snapshot) => {
                 const friendsList = await Promise.all(
                     snapshot.docs.map(async (doc) => {
@@ -44,9 +44,10 @@ const FriendsListScreen = ({ route, navigation }) => {
                         const username = friendData.username || 'Unknown';
                         
                         const plantsCollection = collection(firestore, 'users', friendId, 'plants');
-                        const plantsSnapshot = await getDocs(plantsCollection);
-                        const plantsCollected = plantsSnapshot.size;
-
+                        
+                        const plantsCollectedSnapshot = await getDocs(plantsCollection);
+                        const plantsCollected = plantsCollectedSnapshot.size; 
+    
                         return {
                             friendId,
                             username,
@@ -54,15 +55,15 @@ const FriendsListScreen = ({ route, navigation }) => {
                         };
                     })
                 );
-                setFriends(friendsList);
+                setFriends(friendsList);  
             });
-
+    
             return unsubscribe;
         };
-
+    
         fetchUserInfo();
         const unsubscribe = fetchFriends(); 
-
+    
         return () => unsubscribe(); 
     }, [userId]);
 
@@ -104,7 +105,7 @@ const FriendsListScreen = ({ route, navigation }) => {
                     <Text style={styles.buttonText}>Add New Friend</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.button, { backgroundColor: 'red' }]} onPress={handleSignOut}>
+                <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                     <Icon name="log-out-outline" size={20} color="white" />
                     <Text style={styles.buttonText}>Sign Out</Text>
                 </TouchableOpacity>
@@ -174,6 +175,28 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 10,
         borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    signOutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'red', 
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'darkred',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
     },
     buttonText: {
         color: 'white',

@@ -9,7 +9,7 @@ import { collection, getDocs } from 'firebase/firestore';
 const CollectionScreen = ({ navigation }) => {
  	const [collectionData, setCollectionData] = useState([]);
 
-	 const removePlantLocally = async (plantToRemove) => {
+	/* const removePlantLocally = async (plantToRemove) => {
         try {
             const storedCollection = await AsyncStorage.getItem('plantCollection');
             let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
@@ -22,12 +22,12 @@ const CollectionScreen = ({ navigation }) => {
     
             await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
             Alert.alert('Success', 'Plant removed from local collection.');
-            setCollectionData(updatedCollection); // Update the displayed collection
+            setCollectionData(updatedCollection);
         } catch (error) {
             console.error('Error removing plant locally:', error.message);
             Alert.alert('Error', 'Failed to remove plant from local collection.');
         }
-    };
+    }; */
 
 	useFocusEffect(
 		React.useCallback(() => {

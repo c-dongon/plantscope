@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { auth, firestore } from './firebase.client';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const FriendsScreen = ({ navigation }) => {
     const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -82,12 +83,15 @@ const FriendsScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
         <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.text}>To add friends, and see their collections!</Text>
         <TextInput
             style={styles.input}
             placeholder="Username or Email"
             value={emailOrUsername}
             onChangeText={setEmailOrUsername}
             autoCapitalize="none"
+            placeholderTextColor="#888" 
+
         />
         <TextInput
             style={styles.input}
@@ -96,14 +100,19 @@ const FriendsScreen = ({ navigation }) => {
             onChangeText={setPassword}
             secureTextEntry
             autoCapitalize="none"
+            placeholderTextColor="#888" 
         />
         {loading ? (
             <ActivityIndicator size="large" color="#74cc60" />
         ) : (
-            <Button title="Sign In" onPress={handleSignIn} />
+            <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+		        <Icon name="log-in-outline" size={24} color="white" />
+                <Text style={styles.signInButtonText}>Sign in</Text>
+            </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
-            <Text style={styles.registerText}>Register</Text>
+        <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('RegisterScreen')}>
+		<Icon name="create-outline" size={24} color="white" />
+            <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
         </View>
     );
@@ -119,9 +128,14 @@ const FriendsScreen = ({ navigation }) => {
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 5,
         textAlign: 'center',
         color: '#333',
+    },
+    text: {
+        fontSize: 17,
+        textAlign: 'center',
+        marginBottom: 15,
     },
     input: {
         height: 40,
@@ -131,10 +145,48 @@ const FriendsScreen = ({ navigation }) => {
         padding: 10,
         borderRadius: 5,
     },
-    registerText: {
-        marginTop: 20,
-        textAlign: 'center',
-        color: 'blue',
+    signInButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#5bc443',
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
+        marginBottom: 10,
+    },
+    signInButtonText: {
+        color: 'white',
+        marginLeft: 5,
+        fontSize: 16,   
+    },
+    registerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#409e2b',
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#246915',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    registerButtonText: {
+        color: 'white',
+        marginLeft: 5,
+        fontSize: 16,   
     },
 });
 

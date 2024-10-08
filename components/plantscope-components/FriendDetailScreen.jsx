@@ -202,7 +202,7 @@ const FriendDetailScreen = ({ route }) => {
     ) : (
         <View style={styles.container}>
             <Text style={styles.totalCountText}>
-                {friendUsername ? `${friendUsername}'s Collection` : "Friend's Collection"}
+                Plants Collected: {plants.length}
             </Text>
             <FlatList
                 data={plants}
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     totalCountText: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginBottom: -5,
         textAlign: 'center',
     },
 	plantImage: {
@@ -248,6 +248,11 @@ const styles = StyleSheet.create({
 		height: 80,
 		borderRadius: 10,
 		marginRight: 10,
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.75,
+        shadowRadius: 6,
+        elevation: 2,
 	},
     itemContainer: {
         flexDirection: 'row',
@@ -288,7 +293,18 @@ const styles = StyleSheet.create({
         height: 300,
         borderRadius: 10,
         marginTop: 15,
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.75,
+        shadowRadius: 6,
+        elevation: 2,
     },
+	sectionTitle: {
+		fontSize: 18,
+		fontWeight: 'bold',
+		marginTop: 0,
+		marginBottom: 0,
+	},
     plantDetails: {
         fontSize: 16,
         color: 'black',
@@ -304,6 +320,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
         marginTop: 10,
+        alignSelf: 'center'
     },
     button: {
         flexDirection: 'row',
@@ -311,9 +328,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#5bc443',
         paddingVertical: 10,
         paddingHorizontal: 10,
-        borderRadius: 10,
         marginTop: 10,
         marginBottom: 10,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
     },
     buttonText: {
         color: 'white',

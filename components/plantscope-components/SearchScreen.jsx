@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { firestore } from './firebase.client'; 
 import { collection, query, where, getDocs, setDoc, doc, getDoc, deleteDoc } from 'firebase/firestore'; 
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const SearchScreen = ({ navigation, route }) => {
     const [queryText, setQueryText] = useState('');
     const [results, setResults] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
-    const [userInfo, setUserInfo] = useState(null); // Initialize userInfo state
+    const [userInfo, setUserInfo] = useState(null); 
     const { userId } = route.params;
 
     const fetchUserInfo = async () => {
@@ -15,7 +16,7 @@ const SearchScreen = ({ navigation, route }) => {
             const userDocRef = doc(firestore, 'users', userId);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
-                setUserInfo(userDoc.data()); // Save user data into state
+                setUserInfo(userDoc.data()); 
             } else {
                 console.error('User does not exist');
             }
@@ -50,7 +51,7 @@ const SearchScreen = ({ navigation, route }) => {
     };
 
     useEffect(() => {
-        fetchUserInfo(); // Fetch current user info when component mounts
+        fetchUserInfo(); 
         fetchFriendRequests();
     }, []);
 
@@ -86,7 +87,6 @@ const SearchScreen = ({ navigation, route }) => {
 
     const handleAcceptFriendRequest = async (requesterId, requesterUsername) => {
         try {
-            // Ensure current user's username is loaded
             if (!userInfo || !userInfo.username) {
                 const userDocRef = doc(firestore, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
@@ -97,7 +97,6 @@ const SearchScreen = ({ navigation, route }) => {
                 }
             }
 
-            // Ensure requester's username is fetched correctly
             if (!requesterUsername) {
                 const requesterDocRef = doc(firestore, 'users', requesterId);
                 const requesterDoc = await getDoc(requesterDocRef);
@@ -108,19 +107,17 @@ const SearchScreen = ({ navigation, route }) => {
                 }
             }
 
-            // Add friend for both users
             const userFriendRef = doc(firestore, 'users', userId, 'friends', requesterId);
             const requesterFriendRef = doc(firestore, 'users', requesterId, 'friends', userId);
 
             await setDoc(userFriendRef, { friendId: requesterId, username: requesterUsername });
-            await setDoc(requesterFriendRef, { friendId: userId, username: userInfo.username }); // Ensure userInfo.username exists
+            await setDoc(requesterFriendRef, { friendId: userId, username: userInfo.username }); 
 
-            // Remove the friend request document
             const requestDocRef = doc(firestore, 'users', userId, 'friendRequests', requesterId);
             await deleteDoc(requestDocRef);
 
             alert('Friend request accepted!');
-            fetchFriendRequests(); // Refresh the friend requests
+            fetchFriendRequests();  
         } catch (error) {
             console.error('Error accepting friend request:', error.message);
         }
@@ -133,8 +130,12 @@ const SearchScreen = ({ navigation, route }) => {
             value={queryText}
             onChangeText={setQueryText}
             style={styles.input}
+            placeholderTextColor="#888" 
         />
-        <Button title="Search" onPress={handleSearch} />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+            <Text style={styles.searchButtonText}>Search </Text>
+		    <Icon name="search" size={20} color="white" style={styles.searchIcon} />
+        </TouchableOpacity>
 
         <Text style={styles.heading}>Search Results</Text>
         <FlatList
@@ -144,6 +145,7 @@ const SearchScreen = ({ navigation, route }) => {
             <TouchableOpacity onPress={() => handleSendFriendRequest(item.id)}>
                 <View style={styles.resultItem}>
                     <Text>{item.username}</Text>
+                    <Icon name="person-add-outline" size={20} color="black" style={styles.addIcon} />
                 </View>
             </TouchableOpacity>
             )}
@@ -170,21 +172,60 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        backgroundColor: '#f5f5f5',
     },
     input: {
-        borderBottomWidth: 1,
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginBottom: 15,
+        backgroundColor: '#fff',
+    },
+    searchButton: {
+        backgroundColor: '#5bc443',
+        paddingVertical: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
         marginBottom: 20,
+        borderWidth: 2,
+        borderColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
+    },
+    searchButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    addIcon: {
+        marginLeft: 'auto',
+        marginRight: 5,
     },
     resultItem: {
         padding: 15,
-        borderBottomWidth: 1,
-        borderColor: '#ccc',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
         marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0,
+        shadowRadius: 4,
+        elevation: 2,
+        flexDirection: 'row'
     },
+
     heading: {
         fontSize: 18,
         fontWeight: 'bold',
-        marginTop: 20,
+        marginVertical: 10,
     },
 });
 
