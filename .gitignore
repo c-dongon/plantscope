@@ -26,4 +26,5 @@ app-example/
 scripts/
 
 # keep keys secret
-keys.env
+.env
+app.config.js
