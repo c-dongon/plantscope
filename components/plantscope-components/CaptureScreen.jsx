@@ -16,6 +16,7 @@ const CaptureScreen = () => {
     const [wikiPlantDetails, setWikiPlantDetails] = useState(null);
     const [wikiImages, setWikiImages] = useState([]); 
     const [loading, setLoading] = useState(false);
+    const [buttonDisabled, setButtonDisabled] = useState(true);
 
     const plantNetApiKey = Constants.expoConfig.extra.plantNetApiKey;
 
@@ -34,6 +35,7 @@ const CaptureScreen = () => {
     };
 
     const handleOpenCamera = async () => {
+        setLoading(true);
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -44,10 +46,13 @@ const CaptureScreen = () => {
             const fileType = result.uri.split('.').pop();
             setSelectedImage(result.uri);
             identifyPlant(result.uri, fileType);
-        }
+        } else {
+            setLoading(false);
+        };
     };
 
     const handleOpenGallery = async () => {
+        setLoading(true);
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -59,11 +64,14 @@ const CaptureScreen = () => {
             const fileType = imageUri.split('.').pop();
             setSelectedImage(imageUri);
             identifyPlant(imageUri, fileType);
-        }
-    };
+        } else {
+            setLoading(false);
+        };
+    }
 
     const identifyPlant = async (imageUri, fileType) => {
         setLoading(true);
+        setButtonDisabled(true); 
 
         const mimeType = fileType === 'png' ? 'image/png' : 'image/jpeg';
 
@@ -85,7 +93,7 @@ const CaptureScreen = () => {
             if (response.data && response.data.results) {
                 const scientificName = response.data.results[0].species.scientificName;
                 setPlantInfo(response.data.results[0]);
-                fetchWikiPlantDetails(scientificName);
+                await fetchWikiPlantDetails(scientificName);
             } else {
                 alert('Plant identification failed.');
             }
@@ -94,7 +102,10 @@ const CaptureScreen = () => {
             alert('Plant identification failed.');
         } finally {
             setLoading(false);
-        }
+            setTimeout(() => {
+                setButtonDisabled(false);
+            }, 3000);
+        };
     };
 
     const fetchWikiPlantDetails = async (scientificName) => {
@@ -192,65 +203,80 @@ const CaptureScreen = () => {
         }
     };
 
-	const addToCollection = async () => {
-		let imageUrl = selectedImage; 
-		let plantRefId = null;
-	
-		if (plantInfo) {
-			try {
-				const userId = auth.currentUser ? auth.currentUser.uid : null;
-	
-				if (userId && selectedImage) {
-					const imageRef = ref(storage, `plants/${userId}/${Date.now()}_${plantInfo.species.scientificName}.jpg`);
-					const response = await fetch(selectedImage);
-					const blob = await response.blob();
-					const uploadResult = await uploadBytes(imageRef, blob);
-					imageUrl = await getDownloadURL(uploadResult.ref); 
-				}
-	
-				const newPlant = { plantInfo, wikiPlantDetails, imageUri: imageUrl };
-	
-				const storedCollection = await AsyncStorage.getItem('plantCollection');
-				let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
-	
-				const localDuplicate = updatedCollection.some(
-					(item) => item.plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
-				);
-	
-				if (localDuplicate) {
-					Alert.alert('Duplicate Plant', 'This plant is already in your local collection.');
-					return;
-				}
-	
-				if (userId) {
-					const plantsCollectionRef = collection(firestore, 'users', userId, 'plants');
-					const plantsSnapshot = await getDocs(plantsCollectionRef);
-					
-					const plantExists = plantsSnapshot.docs.some(
-						doc => doc.data().plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
-					);
-	
-					if (plantExists) {
-						Alert.alert('Duplicate Plant', 'This plant is already in your Firebase collection.');
-						return;
-					}
-	
-					const plantRef = doc(plantsCollectionRef);
-					plantRefId = plantRef.id;
-					await setDoc(plantRef, { ...newPlant, docId: plantRefId });
-				}
-	
-				updatedCollection.push({ ...newPlant, docId: plantRefId });
-				await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
-	
-				Alert.alert('Success', 'Plant added to your collection.');
-			} catch (error) {
-				console.error('Error adding plant:', error.message);
-				Alert.alert('Error', 'Failed to add plant to your collection.');
-			}
-		}
-	};
-	
+    const addToCollection = async () => {
+        if (!selectedImage) {
+            Alert.alert('Error', 'No image selected.');
+            return;
+        }
+    
+        if (!auth.currentUser) {
+            Alert.alert('Error', 'You must be signed in to add a plant to the collection.');
+            return;
+        }
+    
+        let imageUrl = selectedImage;
+        let plantRefId = null;
+    
+        if (plantInfo) {
+            try {
+                const userId = auth.currentUser.uid;
+    
+                if (selectedImage) {
+                    const imageRef = ref(storage, `plants/${userId}/${Date.now()}_${plantInfo.species.scientificName}.jpg`);
+                    const response = await fetch(selectedImage);
+    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch the image');
+                    }
+    
+                    const blob = await response.blob();
+                    const uploadResult = await uploadBytes(imageRef, blob);
+    
+                    imageUrl = await getDownloadURL(uploadResult.ref); 
+                }
+    
+                const newPlant = { plantInfo, wikiPlantDetails, imageUri: imageUrl };
+    
+                const storedCollection = await AsyncStorage.getItem('plantCollection');
+                let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
+    
+                const localDuplicate = updatedCollection.some(
+                    (item) => item.plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
+                );
+    
+                if (localDuplicate) {
+                    Alert.alert('Duplicate Plant', 'This plant is already in your local collection.');
+                    return;
+                }
+    
+                const plantsCollectionRef = collection(firestore, 'users', userId, 'plants');
+                const plantsSnapshot = await getDocs(plantsCollectionRef);
+    
+                const plantExists = plantsSnapshot.docs.some(
+                    (doc) => doc.data().plantInfo.species.scientificName.trim().toLowerCase() === plantInfo.species.scientificName.trim().toLowerCase()
+                );
+    
+                if (plantExists) {
+                    Alert.alert('Duplicate Plant', 'This plant is already in your Firebase collection.');
+                    return;
+                }
+    
+                const plantRef = doc(plantsCollectionRef);
+                plantRefId = plantRef.id;
+    
+                await setDoc(plantRef, { ...newPlant, docId: plantRefId });
+    
+                updatedCollection.push({ ...newPlant, docId: plantRefId });
+                await AsyncStorage.setItem('plantCollection', JSON.stringify(updatedCollection));
+    
+                Alert.alert('Success', 'Plant added to your collection.');
+            } catch (error) {
+                console.error('Error adding plant:', error.message);
+                Alert.alert('Error', `Failed to add plant to your collection. Error: ${error.message}`);
+            }
+        }
+    };
+    
 
     const formatExtract = (extract) => {
         return extract.split('\n').map((paragraph, index) => (
@@ -262,62 +288,58 @@ const CaptureScreen = () => {
 
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-            {(selectedImage && plantInfo) ? (
+            {loading ? (
+                <View>
+                    <Text style={styles.loadingMessage}>Identifying Plant!</Text>
+                    <ActivityIndicator size="large" color="#74cc60" />
+                </View>
+            ) : selectedImage && plantInfo ? (
                 <>
-                    {loading ? (
-                        <View>
-                            <Text style={styles.loadingMessage}>Identifying Plant!</Text>
-                            <ActivityIndicator size="large" color="#74cc60" />
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity style={styles.button} onPress={resetScreen}>
+                            <Icon name="chevron-back" size={20} color="white" />
+                            <Text style={styles.buttonText}>Back</Text>
+                        </TouchableOpacity>
+    
+                        <TouchableOpacity style={buttonDisabled ? styles.disabledButton : styles.button} onPress={addToCollection} disabled={buttonDisabled}>
+                            <Icon name="bag-add-outline" size={20} color="white" />
+                            <Text style={styles.buttonText}>Add to Collection</Text>
+                        </TouchableOpacity>
+    
+                        <TouchableOpacity style={styles.button} onPress={retryScan}>
+                            <Icon name="refresh" size={20} color="white" />
+                            <Text style={styles.buttonText}>Retry</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={styles.scoreText}>Confidence: {plantInfo.score.toFixed(2) * 100}%</Text>
+                    <Image source={{ uri: selectedImage }} style={styles.selectedPlantImage} />
+    
+                    {plantInfo && (
+                        <View style={{ marginTop: 10, alignItems: 'center' }}>
+                            <Text style={styles.commonName}>{plantInfo.species.commonNames[0]}</Text>
+                            <Text style={styles.plantDetails}>Plant: {plantInfo.species.scientificName}</Text>
+                            <Text style={styles.plantDetails}>Family: {plantInfo.species.family.scientificName}</Text>
+                            <Text style={styles.plantDetails}>Genus: {plantInfo.species.genus.scientificName}</Text>
                         </View>
-                    ) : (
-                        <>
-                            <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={styles.button} onPress={resetScreen}>
-                                    <Icon name="chevron-back" size={20} color="white" />
-                                    <Text style={styles.buttonText}>Back</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity style={styles.button} onPress={addToCollection}>
-                                    <Icon name="bag-add-outline" size={20} color="white" />
-                                    <Text style={styles.buttonText}>Add to Collection</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity style={styles.button} onPress={retryScan}>
-                                    <Icon name="refresh" size={20} color="white" />
-                                    <Text style={styles.buttonText}>Retry</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <Text style={styles.scoreText}>Confidence: {plantInfo.score.toFixed(2) * 100}%</Text>
-                            <Image source={{ uri: selectedImage }} style={styles.selectedPlantImage} />
-
-                            {plantInfo && (
-                                <View style={{ marginTop: 10, alignItems: 'center' }}>
-                                    <Text style={styles.commonName}>{plantInfo.species.commonNames[0]}</Text>
-                                    <Text style={styles.plantDetails}>Plant: {plantInfo.species.scientificName}</Text>
-                                    <Text style={styles.plantDetails}>Family: {plantInfo.species.family.scientificName}</Text>
-                                    <Text style={styles.plantDetails}>Genus: {plantInfo.species.genus.scientificName}</Text>
-                                </View>
-                            )}
-
-                            {wikiPlantDetails && (
-                                <View style={{ marginTop: 20, alignItems: 'center' }}>
-                                    <Text style={styles.italicName}>{wikiPlantDetails.title}</Text>
-                                    {formatExtract(wikiPlantDetails.extract)}
-                                </View>
-                            )}
-
-                            <ScrollView style={styles.imageList} contentContainerStyle={{ alignItems: 'center' }}>
-                                <Text style={styles.moreImagesBold}>More images:</Text>
-                                {wikiImages.map((imageUrl, index) => (
-                                    <Image
-                                        key={index}
-                                        source={{ uri: imageUrl }}
-                                        style={styles.wikiImage}
-                                    />
-                                ))}
-                            </ScrollView>
-                        </>
                     )}
+    
+                    {wikiPlantDetails && (
+                        <View style={{ marginTop: 20, alignItems: 'center' }}>
+                            <Text style={styles.italicName}>{wikiPlantDetails.title}</Text>
+                            {formatExtract(wikiPlantDetails.extract)}
+                        </View>
+                    )}
+    
+                    <ScrollView style={styles.imageList} contentContainerStyle={{ alignItems: 'center' }}>
+                        <Text style={styles.moreImagesBold}>More images:</Text>
+                        {wikiImages.map((imageUrl, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri: imageUrl }}
+                                style={styles.wikiImage}
+                            />
+                        ))}
+                    </ScrollView>
                 </>
             ) : (
                 <View style={styles.container}>
@@ -325,9 +347,9 @@ const CaptureScreen = () => {
                         <Icon name="camera" size={40} color="white" style={styles.chooseIcon} />
                         <Text style={styles.chooseButtonText}>Take a Photo</Text>
                     </TouchableOpacity>
-
+    
                     <View style={styles.separator} />
-
+    
                     <TouchableOpacity style={styles.chooseButton} onPress={handleOpenGallery}>
                         <Text style={styles.chooseButtonText}>Choose from Gallery</Text>
                         <Icon name="images" size={40} color="white" style={styles.chooseIcon} />
@@ -336,6 +358,7 @@ const CaptureScreen = () => {
             )}
         </ScrollView>
     );
+    
 };
 
 export default CaptureScreen;
@@ -391,6 +414,22 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 2,
         borderColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+        elevation: 2,
+        marginBottom: 10,
+    },
+    disabledButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'lightgrey',
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: 'darkgrey',
         shadowColor: '#000',
         shadowOffset: { height: 1 },
         shadowOpacity: 0.5,

@@ -1,0 +1,34 @@
+1. Create Firebase project, select web app to recieve key credentials
+
+2. Enable email/user authentication in Authentication
+
+3. Create database in test mode in Firestore database, add rules:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /{document=**} {
+      allow read, write: if true; // change to false in production
+    }
+    
+    match /users/{userId}/plants/{plantId} {
+      allow delete: if request.auth.uid == userId;
+    }
+  }
+}
+
+4. Create storage in test mode in Storage, add rules:
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /plants/{userId}/{plantImage} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+

@@ -23,4 +23,3 @@ scripts/
 
 # keep keys secret
 .env
-app.config.js
