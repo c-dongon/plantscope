@@ -9,7 +9,8 @@ import { collection, getDocs } from 'firebase/firestore';
 const CollectionScreen = ({ navigation }) => {
  	const [collectionData, setCollectionData] = useState([]);
 
-	 const removePlantLocally = async (plantToRemove) => {
+	/*
+	const removePlantLocally = async (plantToRemove) => {
         try {
             const storedCollection = await AsyncStorage.getItem('plantCollection');
             let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
@@ -32,6 +33,7 @@ const CollectionScreen = ({ navigation }) => {
 	const handleRemovePlant = (plant) => {
 		removePlantLocally(plant);
 	}; 
+	*/
 
 	useFocusEffect(
 		React.useCallback(() => {
@@ -76,7 +78,7 @@ const CollectionScreen = ({ navigation }) => {
 			)}
 			<Text style={styles.plantName}>{item.plantInfo.species.scientificName}</Text>
 		</View>
-		<Icon name="trash-outline" size={24} color="red" style={styles.arrowIcon} onPress={() => handleRemovePlant(item)} />
+            <Icon name="chevron-forward" size={24} color="gray" style={styles.arrowIcon} />
 		</TouchableOpacity>
   );
 
