@@ -1,27 +1,19 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDocs, query, where, deleteDoc, getDoc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { 
-  REACT_APP_FIREBASE_API_KEY,
-  REACT_APP_FIREBASE_AUTH_DOMAIN,
-  REACT_APP_FIREBASE_PROJECT_ID,
-  REACT_APP_FIREBASE_STORAGE_BUCKET,
-  REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  REACT_APP_FIREBASE_APP_ID,
-  REACT_APP_FIREBASE_MEASUREMENT_ID
-} from '@env';
+import Constants from 'expo-constants';
 
 const firebaseConfig = {
-  apiKey: REACT_APP_FIREBASE_API_KEY,
-  authDomain: REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: REACT_APP_FIREBASE_APP_ID,
-  measurementId: REACT_APP_FIREBASE_MEASUREMENT_ID,
+    apiKey: Constants.expoConfig.extra.firebaseApiKey, 
+    authDomain: Constants.expoConfig.extra.firebaseAuthDomain, 
+    projectId: Constants.expoConfig.extra.firebaseProjectId,
+    storageBucket: Constants.expoConfig.extra.firebaseStorageBucket, 
+    messagingSenderId: Constants.expoConfig.extra.firebaseMessagingSenderId, 
+    appId: Constants.expoConfig.extra.firebaseAppId, 
+    measurementId: Constants.expoConfig.extra.firebaseMeasurementId 
 };
 
 let app;

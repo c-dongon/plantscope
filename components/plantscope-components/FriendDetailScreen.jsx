@@ -166,7 +166,7 @@ const FriendDetailScreen = ({ route }) => {
                 <Icon name="chevron-back" size={20} color="white" />
                 <Text style={styles.buttonText}>Back to Collection</Text>
             </TouchableOpacity>
-    
+            <Text style={styles.scoreText}>Confidence: {selectedPlant.plantInfo.score.toFixed(2) * 100}%</Text>
             <Text style={styles.sectionTitle}>Submitted Image:</Text>
             {selectedPlant.imageUri ? (
                 <Image source={{ uri: selectedPlant.imageUri }} style={styles.selectedPlantImage} />
@@ -243,6 +243,9 @@ const styles = StyleSheet.create({
         marginBottom: -5,
         textAlign: 'center',
     },
+    scoreText: {
+        marginBottom: -5,
+    },
 	plantImage: {
 		width: 80,
 		height: 80,
@@ -299,11 +302,14 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 2,
     },
+    scoreText: {
+        marginBottom: 0,
+    },
 	sectionTitle: {
 		fontSize: 18,
 		fontWeight: 'bold',
 		marginTop: 0,
-		marginBottom: 0,
+		marginBottom: -5,
 	},
     plantDetails: {
         fontSize: 16,

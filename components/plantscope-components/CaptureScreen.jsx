@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, ActivityIndicator, Alert, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ActivityIndicator, Alert, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,16 +8,16 @@ import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, firestore, storage } from './firebase.client';  
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
-import { REACT_APP_PLANTNET_API_KEY } from '@env';
+import Constants from 'expo-constants';
 
-const CaptureScreen = ({ navigation }) => {
+const CaptureScreen = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [plantInfo, setPlantInfo] = useState(null);
     const [wikiPlantDetails, setWikiPlantDetails] = useState(null);
     const [wikiImages, setWikiImages] = useState([]); 
     const [loading, setLoading] = useState(false);
 
-    const plantNetApiKey = REACT_APP_PLANTNET_API_KEY;
+    const plantNetApiKey = Constants.expoConfig.extra.plantNetApiKey;
 
     const resetScreen = () => {
         setSelectedImage(null);
@@ -262,7 +262,7 @@ const CaptureScreen = ({ navigation }) => {
 
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-            {selectedImage ? (
+            {(selectedImage && plantInfo) ? (
                 <>
                     {loading ? (
                         <View>
@@ -287,7 +287,7 @@ const CaptureScreen = ({ navigation }) => {
                                     <Text style={styles.buttonText}>Retry</Text>
                                 </TouchableOpacity>
                             </View>
-
+                            <Text style={styles.scoreText}>Confidence: {plantInfo.score.toFixed(2) * 100}%</Text>
                             <Image source={{ uri: selectedImage }} style={styles.selectedPlantImage} />
 
                             {plantInfo && (
@@ -351,6 +351,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'black',
     },
+    scoreText: {
+        marginBottom: -5,
+    },
     paragraph: {
         marginBottom: 15,
         textAlign: 'left',
@@ -393,6 +396,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 6,
         elevation: 2,
+        marginBottom: 10,
     },
     buttonText: {
         color: 'white',

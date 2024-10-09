@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,7 +9,7 @@ import { collection, getDocs } from 'firebase/firestore';
 const CollectionScreen = ({ navigation }) => {
  	const [collectionData, setCollectionData] = useState([]);
 
-	/* const removePlantLocally = async (plantToRemove) => {
+	 const removePlantLocally = async (plantToRemove) => {
         try {
             const storedCollection = await AsyncStorage.getItem('plantCollection');
             let updatedCollection = storedCollection ? JSON.parse(storedCollection) : [];
@@ -31,7 +31,7 @@ const CollectionScreen = ({ navigation }) => {
 
 	const handleRemovePlant = (plant) => {
 		removePlantLocally(plant);
-	}; */
+	}; 
 
 	useFocusEffect(
 		React.useCallback(() => {
@@ -76,8 +76,8 @@ const CollectionScreen = ({ navigation }) => {
 			)}
 			<Text style={styles.plantName}>{item.plantInfo.species.scientificName}</Text>
 		</View>
-		<Icon name="chevron-forward" size={24} color="gray" style={styles.arrowIcon} />
-    </TouchableOpacity>
+		<Icon name="trash-outline" size={24} color="red" style={styles.arrowIcon} onPress={() => handleRemovePlant(item)} />
+		</TouchableOpacity>
   );
 
   return (

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Alert, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, Alert, ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { auth, firestore } from './firebase.client';
+import { auth, firestore, storage } from './firebase.client';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 
 const FriendsScreen = ({ navigation }) => {
     const [emailOrUsername, setEmailOrUsername] = useState('');

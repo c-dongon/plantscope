@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, Button, Alert, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Alert, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -143,9 +143,6 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 		}
 	};
 	
-	
-	
-	
 	const formatExtract = (extract) => {
 		return extract.split('\n').map((paragraph, index) => (
 		<Text key={index} style={styles.paragraph}>
@@ -153,8 +150,6 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 		</Text>
 		));
 	};
-
-
 	
 	return (
 		<ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -171,6 +166,7 @@ const PlantDetailsScreen = ({ route, navigation }) => {
 			</View>
 
 			{/* submitted image */}
+			<Text style={styles.scoreText}>Confidence: {plant.plantInfo.score.toFixed(2) * 100}%</Text>
 			<Text style={styles.sectionTitle}>Submitted Image:</Text>
 			{plant.imageUri ? (
 				<Image source={{ uri: plant.imageUri }} style={styles.selectedPlantImage} />
@@ -277,7 +273,7 @@ const styles = StyleSheet.create({
 		fontSize: 18,
 		fontWeight: 'bold',
 		marginTop: 0,
-		marginBottom: 0,
+		marginBottom: -5,
 	},
 	imageList: {
 		marginTop: 10,

@@ -4,7 +4,7 @@ import { firestore } from './firebase.client';
 import { collection, query, where, getDocs, setDoc, doc, getDoc, deleteDoc } from 'firebase/firestore'; 
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const SearchScreen = ({ navigation, route }) => {
+const SearchScreen = ({ route }) => {
     const [queryText, setQueryText] = useState('');
     const [results, setResults] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
@@ -133,8 +133,8 @@ const SearchScreen = ({ navigation, route }) => {
             placeholderTextColor="#888" 
         />
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchButtonText}>Search </Text>
-		    <Icon name="search" size={20} color="white" style={styles.searchIcon} />
+            <Icon name="search" size={20} color="white" style={styles.searchIcon} />
+            <Text style={styles.searchButtonText}> Search </Text>
         </TouchableOpacity>
 
         <Text style={styles.heading}>Search Results</Text>
@@ -157,9 +157,11 @@ const SearchScreen = ({ navigation, route }) => {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
             <TouchableOpacity onPress={() => handleAcceptFriendRequest(item.requesterId, item.requesterUsername)}>
-                <View style={styles.resultItem}>
-                    <Text>{item.requesterUsername} has sent you a friend request.</Text>
-                    <Button title="Accept" onPress={() => handleAcceptFriendRequest(item.requesterId, item.requesterUsername)} />
+                <View>
+                    <TouchableOpacity style={styles.resultItem} onPress={() => handleAcceptFriendRequest(item.requesterId, item.requesterUsername)} >
+                        <Text>{item.requesterUsername} has sent you a friend request!</Text>
+                        <Icon name="person-add-outline" size={20} color="black" style={styles.addIcon} />
+                    </TouchableOpacity>
                 </View>
             </TouchableOpacity>
             )}
@@ -208,6 +210,7 @@ const styles = StyleSheet.create({
         marginRight: 5,
     },
     resultItem: {
+        flexDirection: 'row',
         padding: 15,
         backgroundColor: '#fff',
         borderRadius: 8,
